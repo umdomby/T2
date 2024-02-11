@@ -1,4 +1,4 @@
-const char* ssid = "Robolab";
+const char* ssid = "Robolab22";
 const char* password = "wifi123123123";
 const char* idSocket = "995511";
 int speed = 85;
@@ -30,10 +30,12 @@ ServoEasing Servo2;
 
 unsigned long messageInterval = 1000;
 bool connected = false;
-const char* websockets_server_host = "servicerobot.pro"; // Enter server adress
+//const char* websockets_server_host = "servicerobot.pro"; // Enter server adress
 //const char* websockets_server_host = "192.168.0.101"; // Enter server adress
 //const char* websockets_server_host = "93.125.10.70"; // Enter server adress
+const char* websockets_server_host = "217.21.54.2"; // Enter server adress
 const uint16_t websockets_server_port = 8081; // Enter server port
+
 
 using namespace websockets;
 
@@ -85,22 +87,43 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
     if (error) {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
-        return;
+        //return;
     };
 
     method = doc["method"];
 
     if(String(method) == "connection"){
+        doc2["method"] = "connection";
+        doc2["id"] = idSocket;
+        doc2["connected"] = "arduino";
+        output = doc2.as<String>();
+        client.send(output);
         Serial.printf("[WSc] WStype_CONNECTED\n");
     };
 
-    if(String(method) == "messages"){
-        connectByte = doc["connectByte"];
+
+    if(String(method) == "connectByte"){
+        connectByte = doc2["connectByte"];
+        lastUpdate = millis();
         lastUpdate2 = millis();
         lastUpdate22 = millis();
-        connectByte = false;
+        //connectByte = false;
         stop = doc["stop"];
         accel = doc["accel"];
+        Serial.printf("connectByte = %s\n", String(connectByte));
+    };
+
+    if(String(method) == "test"){
+        const char* id = doc2["id"];
+        messageOnOff = doc2["messageOnOff"];
+        Serial.printf(" id = %s", String(id));
+        Serial.printf(" OnOff = %s\n", String(messageOnOff));
+        //to Server
+        doc2["method"] = "testFromArduino";
+        doc2["id"] = idSocket;
+        doc2["messageOnOff"] = messageOnOff; 
+        output = doc2.as<String>();
+        client.send(output);
     };
 
     if(String(method) == "messagesLTRT"){
@@ -139,11 +162,11 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
         //messageR = doc["messageR"];
         Serial.printf("Left = %s\n", String(messageL));
         //Serial.printf("Right = %s\n", String(messageR));
-        doc2["method"] = "messagesL";
-        doc2["messageL"] = messageL;
+        //doc2["method"] = "messagesL";
+        //doc2["messageL"] = messageL;
         //doc2["messageR"] = messageR;
-        String output = doc2.as<String>();
-        client.send(output);
+        //String output = doc2.as<String>();
+        //client.send(output);
     };
 
     if(String(method) == "messagesR"){
@@ -159,24 +182,25 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
         // }else{messageR = messageR * speed;}
         //Serial.printf("Left = %s\n", String(messageL));
         Serial.printf("Right = %s\n", String(messageR));
-        doc2["method"] = "messagesR";
+        //doc2["method"] = "messagesR";
         //doc2["messageL"] = messageL;
-        doc2["messageR"] = messageR;
-        String output = doc2.as<String>();
-        client.send(output);
+        //doc2["messageR"] = messageR;
+        //String output = doc2.as<String>();
+        //client.send(output);
     };
 
     if(String(method) == "messagesOnOff"){
         messageOnOff = doc["messageOnOff"];
-        doc2["method"] = "messagesOnOff";
-        doc2["messageOnOff"] = messageOnOff;
         Serial.printf("OnOff = %s\n", String(messageOnOff));
-        String output = doc2.as<String>();
-        client.send(output);
+        // doc2["method"] = "messagesOnOff";
+        // doc2["messageOnOff"] = messageOnOff;
+        // String output = doc2.as<String>();
+        // client.send(output);
         messageL = 0;
         messageR = 0;
         digitalWrite(ONOFF, messageOnOff);
     };
+
     // if(String(method) == "messagesStop"){
     //     messageStop = doc["messageStop"];
     //     doc2["method"] = "messagesStop";
@@ -189,24 +213,24 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
     if(String(method) == "messagesFBLR"){
         messageFBL = doc["messageFBL"];
         messageFBR = doc["messageFBR"];
-        doc2["method"] = "messagesFBLR";
-        doc2["messageFBL"] = messageFBL;
-        doc2["messageFBR"] = messageFBR;
         Serial.printf("UpDownLeft = %s", String(messageFBL));
         Serial.printf(" UpDownRight = %s\n", String(messageFBR));
-        String output = doc2.as<String>();
-        client.send(output);
+        // doc2["method"] = "messagesFBLR";
+        // doc2["messageFBL"] = messageFBL;
+        // doc2["messageFBR"] = messageFBR;
+        // String output = doc2.as<String>();
+        // client.send(output);
         digitalWrite(FBL, messageFBL);
         digitalWrite(FBR, messageFBR);
     };
 
         if(String(method) == "saddleUP"){
         saddleUP = doc["message"];
-        doc2["method"] = "saddleUP";
-        doc2["saddleUP"] = saddleUP;
         Serial.printf("sanddleUP = %s\n", String(saddleUP));
-        String output = doc2.as<String>();
-        client.send(output);
+        // doc2["method"] = "saddleUP";
+        // doc2["saddleUP"] = saddleUP;
+        // String output = doc2.as<String>();
+        // client.send(output);
         if(digitalRead(saddleDOWNpin) != LOW){
             digitalWrite(saddleUPpin, saddleUP);
         }
@@ -214,11 +238,11 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
 
     if(String(method) == "saddleDOWN"){
         saddleDOWN = doc["message"];
-        doc2["method"] = "saddleDOWN";
-        doc2["saddleDOWN"] = saddleDOWN;
         Serial.printf("saddleDOWN = %s\n", String(saddleDOWN));
-        String output = doc2.as<String>();
-        client.send(output);
+        // doc2["method"] = "saddleDOWN";
+        // doc2["saddleDOWN"] = saddleDOWN;
+        // String output = doc2.as<String>();
+        // client.send(output);
         if(digitalRead(saddleUPpin) != LOW){
             digitalWrite(saddleDOWNpin, saddleDOWN);
         }
@@ -226,11 +250,11 @@ void onMessageCallback(WebsocketsMessage messageSocket) {
 
     if(String(method) == "light"){
         light = doc["message"];
-        doc2["method"] = "light";
-        doc2["light"] = light;
-        Serial.printf("light = %s\n", String(light));
-        String output = doc2.as<String>();
-        client.send(output);
+        // doc2["method"] = "light";
+        // doc2["light"] = light;
+        // Serial.printf("light = %s\n", String(light));
+        // String output = doc2.as<String>();
+        // client.send(output);
         digitalWrite(LIGHT_PIN, light);
     };
 
@@ -245,8 +269,9 @@ void onEventsCallback(WebsocketsEvent event, String data) {
         Serial.println("Connnection Closed");
     } else if(event == WebsocketsEvent::GotPing) {
         Serial.println("Got a Ping!");
-    };
+    }
 }
+
 
 
 void socketSetup(){
@@ -382,16 +407,23 @@ void loop(){
         // ESP.reset(); 
         // WiFi.disconnect();
         // WiFi.reconnect();
+
+        // doc2["method"] = "test";
+        // doc2["txt"] = "11222333444";
+        // String output = doc2.as<String>();
+        // client.send(output);
+
         lastUpdate2 = millis();
     };
 
-    if (lastUpdate22 + 8000 < millis()){ 
+    if (lastUpdate22 + 35000 < millis()){ 
         analogWrite(LPWM, 0);
         analogWrite(RPWM, 0);
         digitalWrite(saddleUPpin, true);
         digitalWrite(saddleDOWNpin, true);
-        Serial.println("lastUpdate22 + 5000, ESP.restart()");
+        Serial.println("lastUpdate22 + 35000, ESP.restart()");
         ESP.restart();
+        //WiFi.reconnect();
         lastUpdate22 = millis();
     };
 
